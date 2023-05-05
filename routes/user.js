@@ -16,68 +16,61 @@ userRouter.get("/", async (req, res) => {
   }
 });
 
+
+
 userRouter.post("/register", async (req, res) => {
-  const { email, password, name, address, locality, state, phone, repeatPassword, pincode, moreInfo, city, country } = req.body;
+  const { email, password, name, address,  state, phone, pincode, city,  } = req.body;
+try{
+let check=await UserModel.find({email:email})
+if(check.length>0){
+  res.send({msg:"user Already registered you can login"})
+}else{
+  bcrypt.hash(password,3,async(err,hash)=>{
+    if(err){
+      res.send({'msg':err.message},'user not able to register')
 
-  try {
-    if (password !== repeatPassword) {
-      return res.status(400).json({ error: 'Password and Repeat Password do not match' });
+    }else{
+      let user=new UserModel({email, password:hash, name, address,  state, phone, pincode, city})
+      await user.save()
+      res.send({'msg':'Registered successfully please login!'})
     }
-    let user = await UserModel.find({ email });
-
-    if (user.length === 0) {
-      bcrypt.hash(password, 5, async (err, hash) => {
-        if (err) {
-          console.log(err);
-        } else {
-          const User = new UserModel({
-            email,
-      password,
-      name,
-      address,
-      locality,
-      state,
-      phone,
-      repeatPassword,
-      pincode,
-      moreInfo,
-      city,
-      country
-         
-           
-          });
-          await User.save();
-          console.log(User);
-          res.send("Successfully Registered ! Please Login !!");
-        }
-      });
-    } else {
-      res.send("Already Registerd ! Please Login !");
-    }
-  } catch (err) {
-    res.send(err);
-  }
-});
+  })
+}
+}catch(err){
+res.send({'msg':err.message})
+}
+})
+ 
+   
+    
 
 userRouter.post("/login", async (req, res) => {
   const { email, password } = req.body;
-
-  try {
-    const user = await UserModel.findOne({ email });
-    if (!user) {
-    return res.send({error:"User not found"});
-    } 
-    if(user.password!==password){
-      return res.send({error:"Wrong Password"});
-    }
-    
-    
-      res.send({message:"Login Successful !"});
+try{
+  const user = await UserModel.find({ email });
+   if(user.length>0){
+    bcrypt.compare(password,user[0].password,(err,result)=>{
+      if(result){
+        let token=jwt.sign({userId:user[0]._id},'zara')
+        res.send({msg:'User Login Sucess!','name':user[0].name,"token":token})
+      }else{
+        console.log('wrong password')
+      res.send({error:"Wrong Password"})
+      }
+    })
+   }else{
+    res.send({'msg':'user does not exist, Register first'})
+   }
+  
  
-  } catch (err) {
-    res.send({error:"Internal server error"});
-  }
-});
+
+}catch(err){
+res.send({msg:err.message})
+}
+})
+   
+
+
 
 module.exports = {
   userRouter,

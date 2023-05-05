@@ -1,8 +1,9 @@
 const express=require("express")
 const { connection } = require("./config/db")
-
+const {productRoute} = require('./routes/product.js')
 const { userRouter } = require("./routes/user")
-
+const{cartRoute} = require('./routes/cart.js')
+const {CartAuthentication} = require('./middlewares/Cartauth.js')
 const cors= require("cors")
 require("dotenv").config();
 
@@ -15,7 +16,8 @@ app.get("/",(req,res)=>{
 })
 
 app.use("/users",userRouter)
-
+app.use('/product',productRoute)
+app.use('/cart',cartRoute)
 
 
 app.listen(process.env.PORT, async () => {

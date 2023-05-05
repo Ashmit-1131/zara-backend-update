@@ -2,10 +2,22 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 var jwt = require("jsonwebtoken");
 const { UserModel } = require("../models/User.model");
-
+const { CartAuthentication } = require('../middlewares/Cartauth.js')
 const userRouter = express.Router();
 
 userRouter.use(express.json());
+ 
+//GetProfile_________________________
+userRouter.get('/profile',CartAuthentication, async(req,res)=>{
+  try{
+      let userdata = await userModel.find({_id:req.body.user})
+      res.send(userdata)
+  }catch(err){
+      res.send({"err":err.message})
+  }
+})
+
+
 
 userRouter.get("/", async (req, res) => {
   try {
@@ -69,7 +81,18 @@ res.send({msg:err.message})
 }
 })
    
+//update____________________
+userRouter.patch('/updateuser',CartAuthentication,async(req,res)=>{
+  let id = req.body.user;
+   let data = req.body
+  try{
+      let user = await userModel.findByIdAndUpdate({_id:id},data)
+      res.send("user updated")
+  }catch(err){
+      res.send({'msg':err.message})
+  }
 
+})
 
 
 module.exports = {
